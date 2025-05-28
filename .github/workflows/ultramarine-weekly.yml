@@ -51,24 +51,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: $GITHUB_WORKSPACE/artifacts/
-      - name: Create tag
-        id: tag
-        uses: K-Phoen/semver-release-action@v1
-        with:
-          release_branch: main
-          release_strategy: tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Calculate datetime
+        id: datetime
+        run: echo "datetime=$(date --iso-8601=minutes)" >> "$GITHUB_OUTPUT"
       - name: Create release
-        if: steps.tag_and_prepare_release.outputs.tag
-        uses: Roang-zero1/github-create-release-action@v3
+        uses: softprops/action-gh-release@v2
         with:
-          created_tag: ${{ steps.tag.outputs.tag }}
+          draft: false
+          prerelease: false
+          tag_name: ${{ steps.datetime.outputs.datetime }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload release artifacts
-        uses: Roang-zero1/github-upload-release-artifacts-action@v3
-        with:
-          args: $GITHUB_WORKSPACE/artifacts/
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: $GITHUB_WORKSPACE/artifacts/*
