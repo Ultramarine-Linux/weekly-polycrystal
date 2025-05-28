@@ -35,7 +35,7 @@ jobs:
           /var/lib/flatpak
     - run: polycrystal
     - name: Compress to tarball
-      run: cd /var/lib && tar -I 'zstd -12' -cvf /flatpak.tar.zst flatpak/
+      run: cd /var/lib && tar -I 'zstd -16' -cvf /flatpak.tar.zst flatpak/
     - uses: actions/upload-artifact@v4
       with:
         name: flatpak-um${{ matrix.releasever }}-${{ matrix.edition }}-${{ matrix.arch }}
@@ -60,5 +60,4 @@ jobs:
           draft: false
           prerelease: false
           tag_name: ${{ steps.datetime.outputs.datetime }}
-        env:
           files: $GITHUB_WORKSPACE/artifacts/*
