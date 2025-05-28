@@ -53,7 +53,7 @@ jobs:
           path: $GITHUB_WORKSPACE/artifacts/
       - name: Calculate datetime
         id: datetime
-        run: echo "datetime=$(date --iso-8601=minutes)" >> "$GITHUB_OUTPUT"
+        run: echo "datetime=$(TZ=utc date +'%Y.%M.%d.%Hh%Mm')" >> "$GITHUB_OUTPUT"
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
