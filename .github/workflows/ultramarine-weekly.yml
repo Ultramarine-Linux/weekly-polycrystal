@@ -35,7 +35,7 @@ jobs:
           /var/lib/flatpak
     - run: polycrystal
     - name: Compress to tarball
-      run: cd /var/lib && tar -I 'zstd -16' -cvf /flatpak.tar.zst flatpak/
+      run: cd /var/lib && tar -I 'zstd --ultra -22' -cvf /flatpak.tar.zst flatpak/
     - uses: actions/upload-artifact@v4
       with:
         name: flatpak-um${{ matrix.releasever }}-${{ matrix.edition }}-${{ matrix.arch }}
@@ -50,7 +50,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          path: $GITHUB_WORKSPACE/artifacts/
+          path: ~/artifacts/
       - name: Calculate datetime
         id: datetime
         run: echo "datetime=$(TZ=utc date +'%Y.%M.%d.%Hh%Mm')" >> "$GITHUB_OUTPUT"
@@ -60,4 +60,4 @@ jobs:
           draft: false
           prerelease: false
           tag_name: ${{ steps.datetime.outputs.datetime }}
-          files: $GITHUB_WORKSPACE/artifacts/*
+          files: ~/artifacts/**
