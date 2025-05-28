@@ -1,0 +1,74 @@
+on:
+  schedule:
+  - cron: "0 0 * * 0"
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+  workflow_dispatch:
+
+jobs:
+  run-polycrystal:
+    name: Run Polycrystal
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+        edition: [flagship, gnome, plasma, xfce]
+        releasever: [42]
+    container:
+      image: ghcr.io/terrapkg/builder:f${{ matrix.releasever }}
+      options: --cap-add=SYS_ADMIN --privileged
+    steps:
+    - name: Install required packages
+      run: |
+        dnf5 install -y --allowerasing --nogpgcheck \
+          --repofrompath 'ultramarine,https://repos.fyralabs.com/um$releasever' \
+          polycrystal ultramarine-release-identity-${{ matrix.edition }} ultramarine-repos-extras
+    - uses: actions/cache@v4
+      with:
+        key: flatpak-um${{ matrix.releasever }}-${{ matrix.edition }}-${{ matrix.arch }}
+        path: |
+          /var/lib/polycrystal
+          /var/lib/flatpak
+    - run: polycrystal
+    - name: Compress to tarball
+      run: cd /var/lib && tar -I 'zstd --ultra -22' -cf /flatpak.tar.zst flatpak/
+    - uses: actions/upload-artifact@v4
+      with:
+        name: flatpak-um${{ matrix.releasever }}-${{ matrix.edition }}-${{ matrix.arch }}
+        path: /flatpak.tar.zst
+        compression-level: 0
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [run-polycrystal]
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: $GITHUB_WORKSPACE/artifacts/
+      - name: Create tag
+        id: tag
+        uses: K-Phoen/semver-release-action@v1
+        with:
+          release_branch: main
+          release_strategy: tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create release
+        if: steps.tag_and_prepare_release.outputs.tag
+        uses: Roang-zero1/github-create-release-action@v3
+        with:
+          created_tag: ${{ steps.tag.outputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload release artifacts
+        uses: Roang-zero1/github-upload-release-artifacts-action@v3
+        with:
+          args: $GITHUB_WORKSPACE/artifacts/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
