@@ -49,7 +49,7 @@ jobs:
       - name: Tidy up artifacts
         id: tidy
         run: |
-          echo "datetime=$(TZ=utc date +'%Y.%M.%d.%Hh%Mm')" >> "$GITHUB_OUTPUT"
+          echo "datetime=$(TZ=utc date +'%Y.%m.%d.%Hh%Mm')" >> "$GITHUB_OUTPUT"
           # also tidy up files
           for f in artifacts/*/flatpak.tar.zst; do
             mv $f $(echo $f | sed 's@/flatpak.tar.zst@.tar.zst@')
